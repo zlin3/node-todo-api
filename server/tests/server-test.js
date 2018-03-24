@@ -2,10 +2,13 @@ const expect = require('expect');
 const request = require('supertest');
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {ObjectID} = require('mongodb');
 
 const todos = [{
+  _id: new ObjectID(),
   text: 'first test todo'
 }, {
+  _id: new ObjectID(),
   text: 'second test todo'
 }];
 
@@ -69,4 +72,30 @@ describe('GET /todos', () => {
       })
       .end(done);
   });
+});
+
+describe('GET /tods/:id', () => {
+  it('should get the correct todo', (done) => {
+    request(app)
+      .get(`/todos/${todos[0]._id.toHexString()}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(todos[0].text)
+      })
+      .end(done);
+  });
+  it('should get no todo for invaid id', (done) => {
+    request(app)
+      .get('/todos/1234')
+      .expect(404)
+      .end(done);
+  });
+  it('should get no todo for actual not-found', (done) => {
+    var fake = new ObjectID().toHexString();
+    request(app)
+      .get(`/todos/${fake}`)
+      .expect(404)
+      .end(done);
+  });
+
 });
