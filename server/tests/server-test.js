@@ -99,3 +99,43 @@ describe('GET /tods/:id', () => {
   });
 
 });
+
+
+describe('DELETE /todos/:id', () => {
+  it('should remove the correct todo', (done) => {
+    request(app)
+      .delete(`/todos/${todos[0]._id.toHexString()}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(todos[0].text)
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        Todo.findById(`${todos[0]._id.toHexString()}`)
+          .then((todo) => {
+            expect(todo).toNotExist();
+          })
+          .catch((e) => done(e))
+      });
+
+      request(app)
+      .get(`/todos/${todos[0]._id.toHexString()}`)
+      .expect(404)
+      .end(done);
+  });
+  it('should 404 for invaid id', (done) => {
+    request(app)
+      .delete('/todos/1234')
+      .expect(404)
+      .end(done);
+  });
+  it('should get 404 for actual not-found', (done) => {
+    var fake = new ObjectID().toHexString();
+    request(app)
+      .delete(`/todos/${fake}`)
+      .expect(404)
+      .end(done);
+  });
+});
